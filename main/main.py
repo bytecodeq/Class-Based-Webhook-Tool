@@ -1,74 +1,77 @@
 import requests
-import threading
+from concurrent.futures import ThreadPoolExecutor
 import sys
 
-class WebhookTool:
+class hooks:
     def __init__(self):
-        def spam():
-            webhook = input("Your webhook > ")
-            msg = input("Your message > ")
+        self.hook = None
+        self.msg = None
 
-            json = {
-                'content': msg
-            }
-            while True:
-                r = requests.post(webhook, json=json)
-                if r.status_code == 204:
-                    print(f"Successfully sent msg to | {webhook}")
-                else:
-                    print("Failed sending message")
+    def spam(self):
+        json = {
+            'content': self.msg
+        }
+        while True:
+            r = requests.post(
+                self.hook, 
+                json=json
+            )
 
-                t = threading.Thread(target=spam)
-                t.start()
-
-        def sendmsg():
-            webhook = input("Your webhook > ")
-            msg = input("Your message > ")
-
-            json = {
-                'content': msg
-            }
-
-            r = requests.post(webhook, json=json)
             if r.status_code == 204:
-                print(f"Successfully sent msg to | {webhook}")
+                print(f"Successfully sent msg to | {self.hook}")
+
             else:
                 print("Failed sending message")
 
-        def delete():
-            webhook = input("Your webhook > ")
+    def sendmsg(self):
+        json = {
+            'content': self.msg
+        }
 
-            n = requests.delete(webhook)
-            if n.status_code == 200:
-                print("Successfully deleted webhook")
-            else:
-                print("Failed to delete webhook")
+        r = requests.post(
+            self.hook, 
+            json=json
+        )
 
-        def exit_program():
-            sys.exit()
+        if r.status_code == 204:
+            print(f"Successfully sent msg to | {self.hook}")
+            
+        else:
+            print("Failed sending message")
 
-        self.spam = spam
-        self.delete = delete
-        self.sendmsg = sendmsg
-        self.exit_program = exit_program
+    def delete(self):
+        r = requests.delete(
+            self.hook
+        )
+        if r.status_code == 200:
+            print("Successfully deleted webhook")
 
-        def main():
-            print("Choose from | 1. webhook spammer | 2. webhook deleter | 3. Send only a message | 4. Exit")
-            choice = input("Your choice: ")
+        else:
+            print("Failed to delete webhook")
 
-            options = {
-                '1': self.spam,
-                '2': self.delete,
-                '3': self.sendmsg,
-                '4': self.exit_program,
-            }
+    def exit(self):
+        sys.exit()
 
-            if choice in options:
-                options[choice]()
+    def execute(self, func):
+        with ThreadPoolExecutor(max_workers=10) as exec:
+            exec.submit(func)
 
-        self.main = main
+    def main(self):
+        print("Choose from | 1. webhook spammer | 2. webhook deleter | 3. Send only a message | 4. Exit")
+        choice = input("Your choice: ")
 
+        self.hook = input('Webhook - ')
+        if choice in ['1', '3']:
+            self.msg = input('Message - ')
 
-if __name__ == "__main__":
-    tool = WebhookTool()
-    tool.main()
+        options = {
+            '1': self.spam,
+            '2': self.delete,
+            '3': self.sendmsg,
+            '4': self.exit,
+        }
+
+        if choice in options:
+            self.execute(options[choice])
+
+hooks().main()
